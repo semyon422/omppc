@@ -1,3 +1,4 @@
+require("tweaks.tweaks")
 require("Mods")
 require("Note")
 require("Beatmap")
