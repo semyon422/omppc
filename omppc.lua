@@ -11,19 +11,25 @@ for i = 1, #arg do
 	local cArg = arg[i]
 	local nArg = arg[i + 1]
 	
-	if cArg:sub(1, 2) == "--" then
-		local key = cArg:sub(3, -1)
-		if key == "beatmap" then
+	if cArg:sub(1, 1) == "-" then
+		local key
+		if cArg:sub(2, 2) == "-" then
+			key = cArg:sub(3, -1)
+		else
+			key = cArg:sub(2, -1)
+		end
+		
+		if key == "beatmap" or key == "b" then
 			input.beatmapPath = nArg
-		elseif key == "mods" then
+		elseif key == "mods" or key == "m" then
 			input.mods = nArg
-		elseif key == "score" then
+		elseif key == "score" or key == "s" then
 			input.score = tonumber(nArg)
-		elseif key == "accuracy" then
+		elseif key == "accuracy" or key == "a" then
 			input.accuracy = tonumber(nArg) / 100
-		elseif key == "verbose" then
+		elseif key == "verbose" or key == "v" then
 			input.verbose = true
-		elseif key == "debug" then
+		elseif key == "debug" or key == "d" then
 			input.debug = true
 		end
 		
