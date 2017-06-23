@@ -31,6 +31,10 @@ Beatmap.parse = function(self, filePath)
 	return self
 end
 
+Beatmap.getOverallDifficulty = function(self)
+	return self.overallDifficulty * self.mods.overallDifficultyMultiplier
+end
+
 Beatmap.STAR_SCALING_FACTOR = 0.018
 
 Beatmap.calculateStarRate = function(self)

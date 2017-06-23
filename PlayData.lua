@@ -2,17 +2,17 @@ PlayData = createClass()
 
 PlayData.computePerformancePoints = function(self)
 	self.beatmap.mods = self.mods
-	local pCalc = PerformanceCalculator:new({
+	self.pCalc = PerformanceCalculator:new({
 		starRate = self.beatmap:getStarRate(),
 		noteCount = self.beatmap.noteCount,
-		overallDifficulty = self.beatmap.overallDifficulty,
+		overallDifficulty = self.beatmap:getOverallDifficulty(),
 		
 		score = self.score,
 		accuracy = self.accuracy,
 		mods = self.mods
 	})
-	pCalc:computeTotalValue()
-	self.performancePoints = pCalc.totalValue
+	self.pCalc:computeTotalValue()
+	self.performancePoints = self.pCalc.totalValue
 end
 
 PlayData.getPerformancePoints = function(self)

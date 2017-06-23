@@ -17,6 +17,7 @@ PerformanceCalculator.computeTotalValue = function(self)
 		multiplier = multiplier * 0.50
 	end
 	
+	
 	self:computeStrainValue()
 	self:computeAccValue()
 
@@ -29,7 +30,8 @@ PerformanceCalculator.computeStrainValue = function(self)
 		return
 	end
 
-	local score = self.score * (1 / self.mods.scoreMultiplier)
+	self.realScore = self.score * (1 / self.mods.scoreMultiplier)
+	local score = self.realScore
 
 	self.strainValue = (((5 * math.max(1, self.starRate / 0.0825) - 4) ^ 3) / 110000) * (1 + 0.1 * math.min(1, self.noteCount / 1500))
 
@@ -37,7 +39,7 @@ PerformanceCalculator.computeStrainValue = function(self)
 		self.strainValue = self.strainValue * ((score / 500000) * 0.1)
 	elseif score <= 600000 then
 		self.strainValue = self.strainValue * (0.1 + (score - 500000) / 100000 * 0.2)
-	elseif self.score <= 700000 then
+	elseif score <= 700000 then
 		self.strainValue = self.strainValue * (0.3 + (score - 600000) / 100000 * 0.35)
 	elseif score <= 800000 then
 		self.strainValue = self.strainValue * (0.65 + (score - 700000) / 100000 * 0.20)

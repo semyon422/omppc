@@ -23,6 +23,8 @@ for i = 1, #arg do
 			input.accuracy = tonumber(nArg) / 100
 		elseif key == "verbose" then
 			input.verbose = true
+		elseif key == "debug" then
+			input.debug = true
 		end
 		
 		i = i + 1
@@ -36,10 +38,6 @@ playData.beatmap = Beatmap:new()
 playData.beatmap:parse(input.beatmapPath)
 playData.beatmap.mods = playData.mods
 
-playData.starRate = input.starRate
-playData.noteCount = input.noteCount
-playData.overallDifficulty = input.overallDifficulty
-
 playData.score = input.score
 playData.accuracy = input.accuracy
 
@@ -47,11 +45,31 @@ if input.verbose then
 	print("Beatmap info:")
 	print(" starRate  " .. playData.beatmap:getStarRate())
 	print(" noteCount " .. playData.beatmap.noteCount)
-	print(" OD        " .. playData.beatmap.overallDifficulty)
+	print(" OD        " .. playData.beatmap:getOverallDifficulty())
 	print("Play info")
+	print(" mods      " .. playData.mods.modsString)
 	print(" score     " .. input.score)
 	print(" accuracy  " .. input.accuracy * 100)
 	print(" PP        " .. playData:getPerformancePoints())
+elseif input.debug then
+	playData:computePerformancePoints()
+	print("Mods info")
+	print(" modsString   " .. playData.mods.modsString)
+	print(" scoreMult    " .. playData.mods.scoreMultiplier)
+	print(" timeRate     " .. playData.mods.timeRate)
+	print(" odMult       " .. playData.mods.overallDifficultyMultiplier)
+	print("Beatmap info:")
+	print(" starRate     " .. playData.beatmap:getStarRate())
+	print(" noteCount    " .. playData.beatmap.noteCount)
+	print(" scaled OD    " .. playData.beatmap:getOverallDifficulty())
+	print(" real OD      " .. playData.beatmap.overallDifficulty)
+	print("Play info")
+	print(" scaled score " .. input.score)
+	print(" real score   " .. playData.pCalc.realScore)
+	print(" accuracy     " .. input.accuracy * 100)
+	print(" strainValue  " .. playData.pCalc.strainValue)
+	print(" accValue     " .. playData.pCalc.accValue)
+	print(" PP           " .. playData:getPerformancePoints())
 else
 	print(playData:getPerformancePoints())
 end
