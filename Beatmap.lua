@@ -50,7 +50,6 @@ Beatmap.calculateStrainValues = function(self)
 	local cNote = self.noteData[1]
 	local nNote
 	
-	cNote.strain = 1
 	for i = 2, #self.noteData do
 		nNote = self.noteData[i]
 		nNote:calculateStrains(cNote, self.mods.timeRate)
