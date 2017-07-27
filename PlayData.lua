@@ -2,7 +2,8 @@ PlayData = createClass()
 
 PlayData.computePerformancePoints = function(self)
 	self.beatmap.mods = self.mods
-	self.pCalc = PerformanceCalculator:new({
+	self.pCalc = self.PerformanceCalculator:new({
+		beatmap = self.beatmap,
 		starRate = self.beatmap:getStarRate(),
 		noteCount = self.beatmap.noteCount,
 		overallDifficulty = self.beatmap:getOverallDifficulty(),

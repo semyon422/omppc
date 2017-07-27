@@ -2,7 +2,7 @@ require("tweaks.tweaks")
 require("Mods")
 require("Note")
 require("Beatmap")
-require("PerformanceCalculator")
+require("OsuManiaPerformanceCalculator")
 require("PlayData")
 
 input = {}
@@ -47,16 +47,22 @@ playData.beatmap.mods = playData.mods
 playData.score = input.score
 playData.accuracy = input.accuracy
 
+performanceCalculatorName = "OsuManiaPerformanceCalculator"
+playData.PerformanceCalculator = OsuManiaPerformanceCalculator
+
 if input.verbose then
 	print("Beatmap info:")
 	print(" starRate  " .. playData.beatmap:getStarRate())
 	print(" noteCount " .. playData.beatmap.noteCount)
 	print(" OD        " .. playData.beatmap:getOverallDifficulty())
+	print(" HP        " .. playData.beatmap:getHealthPoints())
 	print("Play info")
 	print(" mods      " .. playData.mods.modsString)
 	print(" score     " .. input.score)
 	print(" accuracy  " .. input.accuracy * 100)
 	print(" PP        " .. playData:getPerformancePoints())
+	print("Performance calculator info:")
+	print(" used:     " .. performanceCalculatorName)
 elseif input.debug then
 	playData:computePerformancePoints()
 	print("Mods info")
@@ -69,6 +75,8 @@ elseif input.debug then
 	print(" noteCount    " .. playData.beatmap.noteCount)
 	print(" scaled OD    " .. playData.beatmap:getOverallDifficulty())
 	print(" real OD      " .. playData.beatmap.overallDifficulty)
+	print(" scaled HP    " .. playData.beatmap:getHealthPoints())
+	print(" real HP      " .. playData.beatmap.healthPoints)
 	print("Play info")
 	print(" scaled score " .. input.score)
 	print(" real score   " .. playData.pCalc.realScore)

@@ -1,7 +1,7 @@
-PerformanceCalculator = createClass()
+OsuManiaPerformanceCalculator = createClass()
 
-PerformanceCalculator.computeTotalValue = function(self)
-	if self.mods.Relax or self.mods.Relax2 or self.mods.Autoplay then
+OsuManiaPerformanceCalculator.computeTotalValue = function(self)
+	if not self:shouldGivePP() then
 		self.totalValue = 0
 		return
 	end
@@ -17,14 +17,21 @@ PerformanceCalculator.computeTotalValue = function(self)
 		multiplier = multiplier * 0.50
 	end
 	
-	
 	self:computeStrainValue()
 	self:computeAccValue()
 
 	self.totalValue = math.pow(math.pow(self.strainValue, 1.1) + math.pow(self.accValue, 1.1), 1 / 1.1) * multiplier
 end
 
-PerformanceCalculator.computeStrainValue = function(self)
+OsuManiaPerformanceCalculator.shouldGivePP = function(self)
+	if self.mods.DoubleTime then
+		return self.score >= self.beatmap:getMaximumScore() / 2
+	else
+		return true
+	end
+end
+
+OsuManiaPerformanceCalculator.computeStrainValue = function(self)
 	if self.mods.scoreMultiplier <= 0 then
 		self.strainValue = 0
 		return
@@ -50,7 +57,7 @@ PerformanceCalculator.computeStrainValue = function(self)
 	end
 end
 
-PerformanceCalculator.computeAccValue = function(self)
+OsuManiaPerformanceCalculator.computeAccValue = function(self)
 	local hitWindow300 = 34 + 3 * (math.min(10, math.max(0, 10 - self.overallDifficulty)))
 	if hitWindow300 <= 0 then
 		self.accValue = 0

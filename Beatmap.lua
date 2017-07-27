@@ -13,6 +13,8 @@ Beatmap.parse = function(self, filePath)
 				self.mode = tonumber(line:trim():sub(6, -1))
 			elseif line:startsWith("OverallDifficulty") then
 				self.overallDifficulty = tonumber(line:trim():sub(19, -1))
+			elseif line:startsWith("HPDrainRate") then
+				self.healthPoints = tonumber(line:trim():sub(13, -1))
             elseif line:startsWith("CircleSize") then
 				self.keymode = tonumber(line:trim():sub(12, -1))
             end
@@ -31,8 +33,16 @@ Beatmap.parse = function(self, filePath)
 	return self
 end
 
+Beatmap.getMaximumScore = function(self)
+	return 1000000 * self.mods.scoreMultiplier
+end
+
 Beatmap.getOverallDifficulty = function(self)
 	return self.overallDifficulty * self.mods.overallDifficultyMultiplier
+end
+
+Beatmap.getHealthPoints = function(self)
+	return self.healthPoints * self.mods.overallDifficultyMultiplier
 end
 
 Beatmap.STAR_SCALING_FACTOR = 0.018
