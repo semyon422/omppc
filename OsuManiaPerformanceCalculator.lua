@@ -1,5 +1,7 @@
 OsuManiaPerformanceCalculator = createClass()
 
+require("shouldGivePP")
+
 OsuManiaPerformanceCalculator.computeTotalValue = function(self)
 	if not self:shouldGivePP() then
 		self.totalValue = 0
@@ -21,14 +23,6 @@ OsuManiaPerformanceCalculator.computeTotalValue = function(self)
 	self:computeAccValue()
 
 	self.totalValue = math.pow(math.pow(self.strainValue, 1.1) + math.pow(self.accValue, 1.1), 1 / 1.1) * multiplier
-end
-
-OsuManiaPerformanceCalculator.shouldGivePP = function(self)
-	if self.mods.DoubleTime then
-		return self.score >= self.beatmap:getMaximumScore() / 2
-	else
-		return true
-	end
 end
 
 OsuManiaPerformanceCalculator.computeStrainValue = function(self)
