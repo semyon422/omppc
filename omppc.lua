@@ -327,52 +327,51 @@ PlayData.getPerformancePoints = function(self)
 	return self.performancePoints or self:computePerformancePoints() or self.performancePoints
 end
 
-input = {}
+if arg then
+	input = {}
 
-for i = 1, #arg do
-	local cArg = arg[i]
-	local nArg = arg[i + 1]
-	
-	if cArg:sub(1, 1) == "-" then
-		local key
-		if cArg:sub(2, 2) == "-" then
-			key = cArg:sub(3, -1)
-		else
-			key = cArg:sub(2, -1)
-		end
+	for i = 1, #arg do
+		local cArg = arg[i]
+		local nArg = arg[i + 1]
 		
-		if key == "beatmap" or key == "b" then
-			input.beatmapPath = nArg
-		elseif key == "mods" or key == "m" then
-			input.mods = nArg
-		elseif key == "score" or key == "s" then
-			input.score = tonumber(nArg)
-		elseif key == "accuracy" or key == "a" then
-			input.accuracy = tonumber(nArg) / 100
-		elseif key == "verbose" or key == "v" then
-			input.verbose = true
-		elseif key == "debug" or key == "d" then
-			input.debug = true
+		if cArg:match("^%-") then
+			local key
+			if cArg:match("^%-%-") then
+				key = cArg:match("^%-%-(.*)$")
+			else
+				key = cArg:match("^%-(.*)$")
+			end
+			
+			if key == "beatmap" or key == "b" then
+				input.beatmapPath = nArg
+			elseif key == "mods" or key == "m" then
+				input.mods = nArg
+			elseif key == "score" or key == "s" then
+				input.score = tonumber(nArg)
+			elseif key == "accuracy" or key == "a" then
+				input.accuracy = tonumber(nArg) / 100
+			elseif key == "verbose" or key == "v" then
+				input.verbose = true
+			end
+			
+			i = i + 1
 		end
-		
-		i = i + 1
 	end
-end
 
-playData = PlayData:new()
-playData.mods = Mods:new():parse(input.mods)
+	playData = PlayData:new()
+	playData.mods = Mods:new():parse(input.mods)
 
-playData.beatmap = Beatmap:new()
-playData.beatmap:parse(input.beatmapPath)
-playData.beatmap.mods = playData.mods
+	playData.beatmap = Beatmap:new()
+	playData.beatmap:parse(input.beatmapPath)
+	playData.beatmap.mods = playData.mods
 
-playData.score = input.score
-playData.accuracy = input.accuracy
+	playData.score = input.score
+	playData.accuracy = input.accuracy
 
-if input.verbose then
-	playData:computePerformancePoints()
-	print(
-		([[
+	if input.verbose then
+		playData:computePerformancePoints()
+		print(
+			([[
 Mods info
  modsString   %s
  scoreMult    %d
@@ -393,25 +392,26 @@ Play info
  accValue     %d
  PP           %f
 ]]
-		):format(	
-			playData.mods.modsString,
-			playData.mods.scoreMultiplier,
-			playData.mods.timeRate,
-			playData.mods.overallDifficultyMultiplier,
-			playData.beatmap:getStarRate(),
-			playData.beatmap.noteCount,
-			playData.beatmap:getOverallDifficulty(),
-			playData.beatmap.overallDifficulty,
-			playData.beatmap:getHealthPoints(),
-			playData.beatmap.healthPoints,
-			input.score,
-			playData.pCalc.realScore,
-			input.accuracy * 100,
-			playData.pCalc.strainValue,
-			playData.pCalc.accValue,
-			playData:getPerformancePoints()
+			):format(	
+				playData.mods.modsString,
+				playData.mods.scoreMultiplier,
+				playData.mods.timeRate,
+				playData.mods.overallDifficultyMultiplier,
+				playData.beatmap:getStarRate(),
+				playData.beatmap.noteCount,
+				playData.beatmap:getOverallDifficulty(),
+				playData.beatmap.overallDifficulty,
+				playData.beatmap:getHealthPoints(),
+				playData.beatmap.healthPoints,
+				input.score,
+				playData.pCalc.realScore,
+				input.accuracy * 100,
+				playData.pCalc.strainValue,
+				playData.pCalc.accValue,
+				playData:getPerformancePoints()
+			)
 		)
-	)
-else
-	print(playData:getPerformancePoints())
+	else
+		print(playData:getPerformancePoints())
+	end
 end
