@@ -373,24 +373,24 @@ if arg then
 		print(
 			([[
 Mods info
- modsString   %s
- scoreMult    %d
- timeRate     %d
- odMult       %d
+ modsString   %8s
+ scoreMult    %8.2f
+ timeRate     %8.2f
+ odMult       %8.2f
 Beatmap info:
- starRate     %d
- noteCount    %d
- scaled OD    %d
- real OD      %d
- scaled HP    %d
- real HP      %d
+ starRate     %8.2f
+ noteCount    %8d
+ scaled OD    %8.1f
+ real OD      %8.1f
+ scaled HP    %8.1f
+ real HP      %8.1f
 Play info
- scaled score %d
- real score   %d
- accuracy     %d
- strainValue  %d
- accValue     %d
- PP           %f
+ scaled score %8d
+ real score   %8d
+ accuracy     %8.2f
+ strainValue  %8.2f
+ accValue     %8.2f
+ PP           %8.2f
 ]]
 			):format(	
 				playData.mods.modsString,
