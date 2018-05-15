@@ -238,21 +238,8 @@ end
 
 OsuManiaPerformanceCalculator = Class:new()
 
-OsuManiaPerformanceCalculator.shouldGivePP = function(self)
-	if self.mods.DoubleTime then
-		return self.score >= self.beatmap:getMaximumScore() / 2
-	else
-		return true
-	end
-end
-
 OsuManiaPerformanceCalculator.computeTotalValue = function(self)
-	if not self:shouldGivePP() then
-		self.totalValue = 0
-		return
-	end
-
-	local multiplier = 1.1
+	local multiplier = 0.8
 	if self.mods.NoFail then
 		multiplier = multiplier * 0.90
 	end
@@ -278,20 +265,21 @@ OsuManiaPerformanceCalculator.computeStrainValue = function(self)
 	self.realScore = self.score * (1 / self.mods.scoreMultiplier)
 	local score = self.realScore
 
-	self.strainValue = (((5 * math.max(1, self.starRate / 0.0825) - 4) ^ 3) / 110000) * (1 + 0.1 * math.min(1, self.noteCount / 1500))
-
+	self.strainValue = math.pow(5 * math.max(1, self.starRate / 0.2) - 4, 2.2) / 135
+	self.strainValue = self.strainValue * (1 + 0.1 * math.min(1, self.noteCount / 1500))
+	
 	if score <= 500000 then
-		self.strainValue = self.strainValue * ((score / 500000) * 0.1)
+		self.strainValue = 0
 	elseif score <= 600000 then
-		self.strainValue = self.strainValue * (0.1 + (score - 500000) / 100000 * 0.2)
+		self.strainValue = self.strainValue * ((score - 500000) / 100000 * 0.3)
 	elseif score <= 700000 then
-		self.strainValue = self.strainValue * (0.3 + (score - 600000) / 100000 * 0.35)
+		self.strainValue = self.strainValue * (0.3 + (score - 600000) / 100000 * 0.25)
 	elseif score <= 800000 then
-		self.strainValue = self.strainValue * (0.65 + (score - 700000) / 100000 * 0.20)
+		self.strainValue = self.strainValue * (0.55 + (score - 700000) / 100000 * 0.20)
 	elseif score <= 900000 then
-		self.strainValue = self.strainValue * (0.85 + (score - 800000) / 100000 * 0.1)
+		self.strainValue = self.strainValue * (0.75 + (score - 800000) / 100000 * 0.15)
 	else
-		self.strainValue = self.strainValue * (0.95 + (score - 900000) / 100000 * 0.05)
+		self.strainValue = self.strainValue * (0.9 + (score - 900000) / 100000 * 0.1)
 	end
 end
 
@@ -302,7 +290,7 @@ OsuManiaPerformanceCalculator.computeAccValue = function(self)
 		return
 	end
 	
-	self.accValue = math.pow((150 / hitWindow300) * math.pow(self.accuracy, 16), 1.8) * 2.5 * (math.min(1.15, math.pow(self.noteCount / 1500, 0.3)))
+	self.accValue = math.max(0, 0.2 - ((hitWindow300 - 34) * 0.006667)) * self.strainValue * math.pow((math.max(0, self.realScore - 960000) / 40000), 1.1)
 end
 
 PlayData = Class:new()
