@@ -1,3 +1,15 @@
+string.split = function(self, divider, notPlain)
+	local position = 0
+	local output = {}
+	
+	for endchar, startchar in function() return self:find(divider, position, not notPlain) end do
+		table.insert(output, self:sub(position, endchar - 1))
+		position = startchar + 1
+	end
+	table.insert(output, self:sub(position))
+	
+	return output
+end
 
 Class = {}
 
@@ -36,6 +48,37 @@ Mods.parse = function(self, modsString)
 		self.timeRate = 3/4
 	end
 	if modsString:find("DT") then
+		self.DoubleTime = true
+		self.timeRate = 3/2
+	end
+	
+	return self
+end
+
+Mods.parseBitwise = function(self, bitwise)
+	if not modsString then
+		modsString = ""
+	end
+	self.modsString = modsString
+	
+	self.scoreMultiplier = 1
+	self.timeRate = 1
+	self.overallDifficultyMultiplier = 1
+	if bit.band(bitwise, 2) == 2 then
+		self.Easy = true
+		self.scoreMultiplier = self.scoreMultiplier * 0.5
+		self.overallDifficultyMultiplier = 0.5
+	end
+	if bit.band(bitwise, 1) == 1 then
+		self.NoFail = true
+		self.scoreMultiplier = self.scoreMultiplier * 0.5
+	end
+	if bit.band(bitwise, 256) == 256 then
+		self.HalfTime = true
+		self.scoreMultiplier = self.scoreMultiplier * 0.5
+		self.timeRate = 3/4
+	end
+	if bit.band(bitwise, 64) == 64 then
 		self.DoubleTime = true
 		self.timeRate = 3/2
 	end
@@ -124,13 +167,13 @@ end
 
 Beatmap = Class:new()
 
-Beatmap.parse = function(self, filePath)
-	local file = io.open(filePath, "r")
+Beatmap.parse = function(self, beatmapString)
     self.noteData = {}
 
     local blockName = ""
-    for line in file:lines() do
-        if line:sub(1,1) == "[" then
+	for _, line in ipairs(beatmapString:split("\n")) do
+		line = line:match("^%s*(.-)%s*$")
+        if line:find("^%[") then
             blockName = line:match("^%[(.*)%]")
         elseif (blockName == "General" or blockName == "Difficulty") and not line:match("^%s*$") then
 			if line:match("^Mode:") then
@@ -152,7 +195,6 @@ Beatmap.parse = function(self, filePath)
 	table.sort(self.noteData, function(a, b) return a.startTime < b.startTime end)
 	
 	self.noteCount = #self.noteData
-	file:close()
 	
 	return self
 end
@@ -315,6 +357,11 @@ PlayData.getPerformancePoints = function(self)
 	return self.performancePoints or self:computePerformancePoints() or self.performancePoints
 end
 
+PlayData.getAccuracyFromHits = function(self, numMiss, num50, num100, numKatu, num300, numGeki)
+	local totalHits = numMiss + num50 + num100 + numKatu + num300 + numGeki
+	return (num50 * 50 + num100 * 100 + numKatu * 200 + (num300 + numGeki) * 300) / (totalHits * 300)
+end
+
 if arg then
 	input = {}
 
@@ -345,12 +392,15 @@ if arg then
 			i = i + 1
 		end
 	end
-
+	
+	local file = io.open(input.beatmapPath, "r")
+	
 	playData = PlayData:new()
 	playData.mods = Mods:new():parse(input.mods)
 
 	playData.beatmap = Beatmap:new()
-	playData.beatmap:parse(input.beatmapPath)
+	playData.beatmap:parse(file:read("*a"))
+	file:close()
 	playData.beatmap.mods = playData.mods
 
 	playData.score = input.score
