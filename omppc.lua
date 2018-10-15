@@ -179,11 +179,11 @@ Beatmap.parse = function(self, beatmapString)
 			if line:match("^Mode:") then
 				self.mode = tonumber(line:match(":(%d+)$"))
 			elseif line:match("^OverallDifficulty") then
-				self.overallDifficulty = tonumber(line:match(":(%d+)$"))
+				self.overallDifficulty = tonumber(line:match(":(.+)$"))
 			elseif line:match("^HPDrainRate") then
-				self.healthPoints = tonumber(line:match(":(%d+)$"))
+				self.healthPoints = tonumber(line:match(":(.+)$"))
             elseif line:match("^CircleSize") then
-				self.keymode = tonumber(line:match(":(%d+)$"))
+				self.keymode = tonumber(line:match(":(.+)$"))
             end
         elseif blockName == "HitObjects" and not line:match("^%s*$") then
 			local note = Note:new({beatmap = self})
