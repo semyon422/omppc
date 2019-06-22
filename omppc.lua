@@ -18,7 +18,7 @@ Mods.odRate = 1
 Mods.parse = function(self, mods)
 	self.modsData = mods
 	if not mods then
-		return
+		return self
 	elseif tonumber(mods) then
 		return self:parseNumber(tonumber(mods))
 	else
