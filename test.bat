@@ -1,5 +1,5 @@
-omppc.lua -b "beatmap.osu" -s 855970 -m DT
-omppc.lua -b "beatmap.osu" -s 855970 -m 64 -v
-omppc.lua -b "beatmap.osu" -s 855970 -m DT -j
-test.lua
+luajit omppc.lua -b "beatmap.osu" -s 855970 -m DT
+luajit omppc.lua -b "beatmap.osu" -s 855970 -m 64 -v
+luajit omppc.lua -b "beatmap.osu" -s 855970 -m DT -j
+luajit test.lua
 pause

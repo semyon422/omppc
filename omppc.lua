@@ -1,11 +1,11 @@
 local Class = {}
 
 Class.new = function(self, object)
-	local object = object or {}
-	
+	object = object or {}
+
 	setmetatable(object, self)
 	self.__index = self
-	
+
 	return object
 end
 
@@ -45,7 +45,7 @@ Mods.parseString = function(self, modsString)
 		self.DoubleTime = true
 		self.timeRate = 3/2
 	end
-	
+
 	return self
 end
 
@@ -68,7 +68,7 @@ Mods.parseNumber = function(self, modsNumber)
 		self.DoubleTime = true
 		self.timeRate = 3/2
 	end
-	
+
 	return self
 end
 
@@ -77,21 +77,21 @@ local Note = Class:new()
 Note.parse = function(self, line, keymode)
 	local x, startTime = line:match("^(%d-),%d-,(%d-),")
 	local endTime = line:match(",(%d-):.+:.+:.+:.+:")
-	
+
 	self.key = math.ceil(x / 512 * keymode)
 	self.keymode = keymode
-	
+
 	self.startTime = tonumber(startTime)
 	self.endTime = tonumber(endTime) or self.startTime
-	
+
 	self.heldUntil = {}
 	self.individualStrains = {}
-	
+
 	for i = 1, keymode do
 		self.individualStrains[i] = 0
 		self.heldUntil[i] = 0
 	end
-	
+
 	return self
 end
 
@@ -113,13 +113,13 @@ Note.calculateStrains = function(self, pNote, timeRate)
 	local timeElapsed = (self.startTime - pNote.startTime) / timeRate
 	local individualDecay = math.pow(self.INDIVIDUAL_DECAY_BASE, timeElapsed / 1000)
 	local overallDecay = math.pow(self.OVERALL_DECAY_BASE, timeElapsed / 1000)
-	
+
 	local holdFactor = 1
 	local holdAddition = 0
-	
+
 	for i = 1, self.keymode do
 		self.heldUntil[i] = pNote.heldUntil[i]
-		
+
 		if self.startTime < self.heldUntil[i] and self.endTime > self.heldUntil[i] then
 			holdAddition = 1
 		end
@@ -131,42 +131,42 @@ Note.calculateStrains = function(self, pNote, timeRate)
 		end
 	end
 	self.heldUntil[self.key] = self.endTime
-	
+
 	for i = 1, self.keymode do
 		self.individualStrains[i] = pNote.individualStrains[i] * individualDecay
 	end
 	self:setIndividualStrain(self:getIndividualStrain() + 2 * holdFactor)
-	
+
 	self.overallStrain = pNote.overallStrain * overallDecay + (addition + holdAddition) * holdFactor
 end
 
 local Beatmap = Class:new()
 
 Beatmap.parse = function(self, beatmapString)
-    self.noteData = {}
-	
-    local blockName
+	self.noteData = {}
+
+	local blockName
 	for line in string.gmatch(beatmapString .. "\n", "(.-)\n") do
 		line = line:match("^%s*(.-)%s*$")
-        if line:find("^%[") then
-            blockName = line:match("^%[(.*)%]")
-        elseif blockName == "General" or blockName == "Difficulty" then
+		if line:find("^%[") then
+			blockName = line:match("^%[(.*)%]")
+		elseif blockName == "General" or blockName == "Difficulty" then
 			if line:match("^Mode:") then
 				self.mode = tonumber(line:match(":(%d+)$"))
 			elseif line:match("^OverallDifficulty") then
 				self.od = tonumber(line:match(":(.+)$"))
-            elseif line:match("^CircleSize") then
+			elseif line:match("^CircleSize") then
 				self.keymode = tonumber(line:match(":(.+)$"))
-            end
-        elseif blockName == "HitObjects" and not line:match("^%s*$") then
-            self.noteData[#self.noteData + 1] = Note:new():parse(line, self.keymode)
-        end
-    end
+			end
+		elseif blockName == "HitObjects" and not line:match("^%s*$") then
+			self.noteData[#self.noteData + 1] = Note:new():parse(line, self.keymode)
+		end
+	end
 	table.sort(self.noteData, function(a, b) return a.startTime < b.startTime end)
 	self.noteCount = #self.noteData
-	
+
 	self:calculateStarRate()
-	
+
 	return self
 end
 
@@ -188,7 +188,7 @@ end
 Beatmap.calculateStrainValues = function(self)
 	local cNote = self.noteData[1]
 	local nNote
-	
+
 	for i = 2, #self.noteData do
 		nNote = self.noteData[i]
 		nNote:calculateStrains(cNote, self.mods.timeRate)
@@ -201,11 +201,11 @@ Beatmap.DECAY_WEIGHT = 0.9
 
 Beatmap.calculateDifficulty = function(self)
 	local actualStrainStep = self.STRAIN_STEP * self.mods.timeRate
-	
+
 	local highestStrains = {}
 	local intervalEndTime = actualStrainStep
 	local maximumStrain = 0
-	
+
 	local pNote
 	for _, note in ipairs(self.noteData) do
 		while (note.startTime > intervalEndTime) do
@@ -217,27 +217,27 @@ Beatmap.calculateDifficulty = function(self)
 				local overallDecay = math.pow(note.OVERALL_DECAY_BASE, (intervalEndTime - pNote.startTime) / 1000)
 				maximumStrain = pNote:getIndividualStrain() * individualDecay + pNote.overallStrain * overallDecay
 			end
-			
+
 			intervalEndTime = intervalEndTime + actualStrainStep
 		end
-		
+
 		local strain = note:getIndividualStrain() + note.overallStrain
 		if strain > maximumStrain then
 			maximumStrain = strain
 		end
-		
+
 		pNote = note
 	end
-	
+
 	local difficulty = 0
 	local weight = 1
 	table.sort(highestStrains, function(a, b) return a > b end)
-	
+
 	for _, strain in ipairs(highestStrains) do
 		difficulty = difficulty + weight * strain
 		weight = weight * self.DECAY_WEIGHT
 	end
-	
+
 	return difficulty
 end
 
@@ -245,17 +245,17 @@ local Calculator = Class:new()
 
 Calculator.computeTotalValue = function(self)
 	local multiplier = 0.8
-	
+
 	if self.mods.NoFail then
 		multiplier = multiplier * 0.90
 	end
 	if self.mods.Easy then
 		multiplier = multiplier * 0.50
 	end
-	
+
 	self:computeStrainValue()
 	self:computeAccValue()
-	
+
 	self.totalValue = math.pow(math.pow(self.strainValue, 1.1) + math.pow(self.accValue, 1.1), 1 / 1.1) * multiplier
 end
 
@@ -264,13 +264,13 @@ Calculator.computeStrainValue = function(self)
 		self.strainValue = 0
 		return
 	end
-	
+
 	self.realScore = self.score * (1 / self.mods.scoreRate)
 	local score = self.realScore
-	
+
 	self.strainValue = math.pow(5 * math.max(1, self.beatmap:getStarRate() / 0.2) - 4, 2.2) / 135
 	self.strainValue = self.strainValue * (1 + 0.1 * math.min(1, self.beatmap.noteCount / 1500))
-	
+
 	if score <= 500000 then
 		self.strainValue = 0
 	elseif score <= 600000 then
@@ -292,7 +292,7 @@ Calculator.computeAccValue = function(self)
 		self.accValue = 0
 		return
 	end
-	
+
 	self.accValue = math.max(0, 0.2 - ((hitWindow300 - 34) * 0.006667)) * self.strainValue * math.pow((math.max(0, self.realScore - 960000) / 40000), 1.1)
 end
 
@@ -300,11 +300,11 @@ local PlayData = Class:new()
 
 PlayData.process = function(self)
 	self.mods = Mods:new():parse(self.modsData)
-	
+
 	self.beatmap = Beatmap:new()
 	self.beatmap.mods = self.mods
 	self.beatmap:parse(self.beatmapString)
-	
+
 	self.calculator = Calculator:new({
 		beatmap = self.beatmap,
 		score = self.score,
@@ -333,7 +333,7 @@ end
 
 PlayData.getJSON = function(self)
 	local data = self:getData()
-	
+
 	local out = {}
 	out[1] = "{"
 	for key, value in pairs(data) do
@@ -346,20 +346,20 @@ PlayData.getJSON = function(self)
 	end
 	out[#out] = out[#out]:sub(1, -2)
 	out[#out + 1] = "}"
-	
+
 	return table.concat(out)
 end
 
 if arg and arg[0] and arg[0]:find("omppc%.lua$") then
-	input = {}
-	
+	local input = {}
+
 	for i = 1, #arg do
 		local cArg = arg[i]
 		local nArg = arg[i + 1]
-		
+
 		if cArg:match("^%-") then
 			local key = cArg:match("^%-(.*)$")
-			
+
 			if key == "b" then
 				input.path = nArg
 			elseif key == "m" then
@@ -371,23 +371,23 @@ if arg and arg[0] and arg[0]:find("omppc%.lua$") then
 			elseif key == "j" then
 				input.json = true
 			end
-			
+
 			i = i + 2
 		end
 	end
-	
+
 	local file = io.open(input.path, "r")
-	
+
 	local playData = PlayData:new()
 	playData.modsData = input.mods
 	playData.beatmapString = file:read("*a")
 	playData.score = input.score
 	playData:process()
-	
+
 	file:close()
-	
+
 	local data = playData:getData()
-	
+
 	if input.verbose then
 		print(
 			([[
@@ -429,7 +429,7 @@ Play info
 	else
 		print(data.pp)
 	end
-	
+
 	return
 end
 
