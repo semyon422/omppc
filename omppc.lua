@@ -17,13 +17,12 @@ Mods.odRate = 1
 
 Mods.parse = function(self, mods)
 	self.modsData = mods
-	if not mods then
-		return self
-	elseif tonumber(mods) then
-		return self:parseNumber(tonumber(mods))
-	else
-		return self:parseString(mods)
+	if tonumber(mods) then
+		self:parseNumber(tonumber(mods))
+	elseif type(mods) == "string" then
+		self:parseString(mods)
 	end
+	return self
 end
 
 Mods.parseString = function(self, modsString)
@@ -45,8 +44,6 @@ Mods.parseString = function(self, modsString)
 		self.DoubleTime = true
 		self.timeRate = 3/2
 	end
-
-	return self
 end
 
 Mods.parseNumber = function(self, modsNumber)
@@ -68,15 +65,13 @@ Mods.parseNumber = function(self, modsNumber)
 		self.DoubleTime = true
 		self.timeRate = 3/2
 	end
-
-	return self
 end
 
 local Note = Class:new()
 
 Note.parse = function(self, line, keymode)
-	local x, startTime = line:match("^(%d-),%d-,(%d-),")
-	local endTime = line:match(",(%d-):.+:.+:.+:.+:")
+	local x, startTime = line:match("^(%d-),%d-,(%d-),.+$")
+	local endTime = line:match("^.+,(%d-):.+:.+:.+:.+:.-$")
 
 	self.key = math.ceil(x / 512 * keymode)
 	self.keymode = keymode
@@ -159,13 +154,11 @@ Beatmap.parse = function(self, beatmapString)
 				self.keymode = tonumber(line:match(":(.+)$"))
 			end
 		elseif blockName == "HitObjects" and not line:match("^%s*$") then
-			self.noteData[#self.noteData + 1] = Note:new():parse(line, self.keymode)
+			table.insert(self.noteData, Note:new():parse(line, self.keymode))
 		end
 	end
 	table.sort(self.noteData, function(a, b) return a.startTime < b.startTime end)
 	self.noteCount = #self.noteData
-
-	self:calculateStarRate()
 
 	return self
 end
@@ -208,7 +201,7 @@ Beatmap.calculateDifficulty = function(self)
 
 	local pNote
 	for _, note in ipairs(self.noteData) do
-		while (note.startTime > intervalEndTime) do
+		while note.startTime > intervalEndTime do
 			table.insert(highestStrains, maximumStrain)
 			if not pNote then
 				maximumStrain = 0
@@ -253,6 +246,7 @@ Calculator.computeTotalValue = function(self)
 		multiplier = multiplier * 0.50
 	end
 
+	self.realScore = self.score / self.mods.scoreRate
 	self:computeStrainValue()
 	self:computeAccValue()
 
@@ -265,7 +259,6 @@ Calculator.computeStrainValue = function(self)
 		return
 	end
 
-	self.realScore = self.score * (1 / self.mods.scoreRate)
 	local score = self.realScore
 
 	self.strainValue = math.pow(5 * math.max(1, self.beatmap:getStarRate() / 0.2) - 4, 2.2) / 135
@@ -304,12 +297,12 @@ PlayData.process = function(self)
 	self.beatmap = Beatmap:new()
 	self.beatmap.mods = self.mods
 	self.beatmap:parse(self.beatmapString)
+	self.beatmap:calculateStarRate()
 
-	self.calculator = Calculator:new({
-		beatmap = self.beatmap,
-		score = self.score,
-		mods = self.mods
-	})
+	self.calculator = Calculator:new()
+	self.calculator.beatmap = self.beatmap
+	self.calculator.score = self.score
+	self.calculator.mods = self.mods
 	self.calculator:computeTotalValue()
 end
 
@@ -344,8 +337,7 @@ PlayData.getJSON = function(self)
 			out[#out + 1] = "\"" .. value .. "\","
 		end
 	end
-	out[#out] = out[#out]:sub(1, -2)
-	out[#out + 1] = "}"
+	out[#out] = out[#out]:sub(1, -2) .. "}"
 
 	return table.concat(out)
 end
